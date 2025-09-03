@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Firewall Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="bg-gray-100">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div
+            class="bg-indigo-800 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition duration-200 ease-in-out">
+            <div class="text-white flex items-center space-x-2 px-4">
+                <i class="fas fa-shield-alt text-2xl"></i>
+                <span class="text-2xl font-bold">AI Firewall</span>
+            </div>
+            <nav>
+                <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 text-white">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                <a href="#alerts"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 text-white">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Alerts
+                </a>
+                <a href="#traffic"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 text-white">
+                    <i class="fas fa-network-wired mr-2"></i>Traffic Analysis
+                </a>
+                <a href="#threats"
+                    class="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 text-white">
+                    <i class="fas fa-bug mr-2"></i>Threat Intelligence
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col md:ml-64">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative" id="connection-status">
+                            <span
+                                class="flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                                Connected
+                            </span>
+                        </div>
+                        <div class="text-gray-500 text-sm" id="current-time"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Traffic Card -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fas fa-chart-line text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Total Traffic</p>
+                                    <p id="total-packets" class="text-2xl font-semibold">0</p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="traffic-bar" class="h-full bg-blue-500" style="width: 0%"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <span id="traffic-trend" class="text-green-500">
+                                        <i class="fas fa-arrow-up"></i> 0%
+                                    </span> from last minute
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Allowed Traffic Card -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i class="fas fa-check-circle text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Allowed Traffic</p>
+                                    <p id="allowed-packets" class="text-2xl font-semibold">0</p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="allowed-bar" class="h-full bg-green-500" style="width: 0%"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Safe and legitimate traffic</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blocked Traffic Card -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-red-100 text-red-600">
+                                    <i class="fas fa-shield-alt text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Blocked Traffic</p>
+                                    <p id="blocked-packets" class="text-2xl font-semibold">0</p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="blocked-bar" class="h-full bg-red-500" style="width: 0%"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Potential threats blocked</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Threats Blocked Card -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Threats Blocked</p>
+                                    <p id="threats-blocked" class="text-2xl font-semibold">0</p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div id="threats-bar" class="h-full bg-yellow-500" style="width: 0%"></div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Malicious activities prevented</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Traffic Overview -->
+                    <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold">Traffic Overview</h2>
+                            <div class="flex space-x-2">
+                                <button id="time-5m"
+                                    class="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded">5m</button>
+                                <button id="time-15m"
+                                    class="px-3 py-1 text-xs bg-white border border-gray-300 rounded">15m</button>
+                                <button id="time-1h"
+                                    class="px-3 py-1 text-xs bg-white border border-gray-300 rounded">1h</button>
+                            </div>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Threat Distribution -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold">Threat Distribution</h2>
+                            <span class="text-xs text-gray-500">Last 24h</span>
+                        </div>
+                        <div class="h-80">
+                            <canvas id="threatChart"></canvas>
+                        </div>
+                        <div id="threat-legend" class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">Security Alerts</h2>
+                        <div class="flex items-center space-x-2">
+                            <button id="refresh-alerts" class="p-1 rounded-full hover:bg-gray-100">
+                                <i class="fas fa-sync-alt text-gray-500"></i>
+                            </button>
+                            <span class="text-sm text-gray-500">Auto-refresh <span id="refresh-timer">5</span>s</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Time</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Source</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Threat Type</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Severity</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Details</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alerts-body" class="bg-white divide-y divide-gray-200 text-sm">
+                                <!-- Alerts will be populated by JavaScript -->
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i> Loading alerts...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Alert Details Modal -->
+    <div id="alert-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-semibold" id="alert-modal-title">Alert Details</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6" id="alert-modal-content">
+                <!-- Alert details will be populated here -->
+            </div>
+            <div class="px-6 py-4 border-t flex justify-end space-x-3">
+                <button id="block-ip" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    <i class="fas fa-ban mr-2"></i>Block IP
+                </button>
+                <button id="close-modal-btn" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+        const threatCtx = document.getElementById('threatChart').getContext('2d');
+
+        // Traffic chart data
+        const trafficChart = new Chart(trafficCtx, {
+            type: 'line',
+            data: {
+                labels: Array(30).fill(''),
+                datasets: [
+                    {
+                        label: 'Total Traffic',
+                        data: [],
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Threats',
+                        data: [],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Packets/Second'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                animation: {
+                    duration: 0
+                }
+            }
+        });
+
+        // Threat distribution chart
+        const threatChart = new Chart(threatCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Port Scans', 'HTTP Floods', 'Malicious IPs', 'Other Anomalies'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(139, 92, 246, 0.8)'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+
+        // Update dashboard data
+        let lastStats = null;
+        let alertRefreshInterval;
+        let refreshTimer = 5;
+        let isPaused = false;
+
+        function updateDashboard() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update stats cards
+                    document.getElementById('total-packets').textContent = data.total_packets.toLocaleString();
+                    document.getElementById('allowed-packets').textContent = data.allowed_packets.toLocaleString();
+                    document.getElementById('blocked-packets').textContent = data.blocked_packets.toLocaleString();
+                    document.getElementById('threats-blocked').textContent = data.threats_blocked.toLocaleString();
+
+                    // Update progress bars
+                    const total = data.total_packets || 1;
+                    document.getElementById('traffic-bar').style.width = '100%';
+                    document.getElementById('allowed-bar').style.width = `${(data.allowed_packets / total) * 100}%`;
+                    document.getElementById('blocked-bar').style.width = `${(data.blocked_packets / total) * 100}%`;
+                    document.getElementById('threats-bar').style.width = data.threats_blocked > 0 ? '100%' : '0%';
+
+                    // Update traffic chart
+                    if (data.traffic_history && data.traffic_history.length > 0) {
+                        const history = data.traffic_history;
+                        const labels = history.map(item => item.time);
+                        const packets = history.map(item => item.packets);
+                        const threats = history.map(item => item.threats);
+
+                        trafficChart.data.labels = labels;
+                        trafficChart.data.datasets[0].data = packets;
+                        trafficChart.data.datasets[1].data = threats;
+                        trafficChart.update();
+                    }
+
+                    // Update threat distribution
+                    if (data.attack_types) {
+                        const threatData = [
+                            data.attack_types.port_scan || 0,
+                            data.attack_types.http_flood || 0,
+                            data.attack_types.malicious_ip || 0,
+                            (data.threats_blocked - (data.attack_types.port_scan || 0) - (data.attack_types.http_flood || 0) - (data.attack_types.malicious_ip || 0))
+                        ];
+                        threatChart.data.datasets[0].data = threatData;
+                        threatChart.update();
+
+                        // Update threat legend
+                        const legend = document.getElementById('threat-legend');
+                        if (legend) {
+                            legend.innerHTML = threatData.map((value, index) => {
+                                const label = threatChart.data.labels[index];
+                                const color = threatChart.data.datasets[0].backgroundColor[index];
+                                const total = threatData.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+
+                                return `
+                                    <div class="flex items-center">
+                                        <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${color}"></span>
+                                        <span class="truncate flex-1">${label}</span>
+                                        <span class="font-medium">${percentage}%</span>
+                                    </div>
+                                `;
+                            }).join('');
+                        }
+                    }
+
+                    lastStats = data;
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                    document.getElementById('connection-status').innerHTML = `
+                        <span class="flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                            Connection Error
+                        </span>
+                    `;
+                });
+        }
+
+        // Update alerts table
+        function updateAlerts() {
+            if (isPaused) return;
+
+            fetch('/api/alerts')
+                .then(response => response.json())
+                .then(alerts => {
+                    const tbody = document.getElementById('alerts-body');
+                    if (alerts.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    No alerts to display
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    tbody.innerHTML = alerts.map(alert => {
+                        const time = new Date(alert.timestamp).toLocaleTimeString();
+                        const severityClass = {
+                            'high': 'bg-red-100 text-red-800',
+                            'medium': 'bg-yellow-100 text-yellow-800',
+                            'low': 'bg-blue-100 text-blue-800'
+                        }[alert.severity?.toLowerCase() || 'low'] || 'bg-gray-100 text-gray-800';
+
+                        return `
+                            <tr class="hover:bg-gray-50 cursor-pointer" data-alert-id="${alert.id}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <div class="text-gray-900">${time}</div>
+                                    <div class="text-gray-500 text-xs">${new Date(alert.timestamp).toLocaleDateString()}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">${alert.source || 'Unknown'}</div>
+                                    <div class="text-xs text-gray-500">${alert.src_port ? 'Port ' + alert.src_port : ''}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">${alert.threat || 'Suspicious Activity'}</div>
+                                    <div class="text-xs text-gray-500">${alert.attack_type || 'Unknown'}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${severityClass}">
+                                        ${alert.severity || 'low'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                    ${alert.details || 'No additional details available'}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-indigo-600 hover:text-indigo-900 mr-3 view-alert" data-alert='${JSON.stringify(alert).replace(/'/g, '&apos;')}'>
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-900 block-ip" data-ip="${alert.source}">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    // Add event listeners to view buttons
+                    document.querySelectorAll('.view-alert').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const alertData = JSON.parse(button.getAttribute('data-alert'));
+                            showAlertDetails(alertData);
+                        });
+                    });
+
+                    // Add event listeners to block IP buttons
+                    document.querySelectorAll('.block-ip').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const ip = button.getAttribute('data-ip');
+                            if (ip && confirm(`Are you sure you want to block ${ip}?`)) {
+                                blockIP(ip);
+                            }
+                        });
+                    });
+
+                    // Add click handler to rows
+                    document.querySelectorAll('tr[data-alert-id]').forEach(row => {
+                        row.addEventListener('click', () => {
+                            const alertId = row.getAttribute('data-alert-id');
+                            const alert = alerts.find(a => a.id === alertId);
+                            if (alert) {
+                                showAlertDetails(alert);
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching alerts:', error);
+                });
+        }
+
+        // Show alert details in modal
+        function showAlertDetails(alert) {
+            const modal = document.getElementById('alert-modal');
+            const title = document.getElementById('alert-modal-title');
+            const content = document.getElementById('alert-modal-content');
+            const blockBtn = document.getElementById('block-ip');
+
+            title.textContent = `Alert: ${alert.threat || 'Security Alert'}`;
+
+            // Format the alert details
+            const details = [
+                { label: 'Time', value: new Date(alert.timestamp).toLocaleString() },
+                { label: 'Source', value: alert.source || 'Unknown' },
+                { label: 'Source Port', value: alert.src_port || 'N/A' },
+                { label: 'Destination', value: alert.destination || 'N/A' },
+                { label: 'Destination Port', value: alert.dst_port || 'N/A' },
+                { label: 'Protocol', value: alert.protocol || 'N/A' },
+                { label: 'Attack Type', value: alert.attack_type || 'N/A' },
+                { label: 'Severity', value: alert.severity || 'low' },
+                { label: 'Details', value: alert.details || 'No additional details available', isCode: true }
+            ];
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    ${details.map(item => `
+                        <div>
+                            <div class="text-sm font-medium text-gray-500">${item.label}</div>
+                            ${item.isCode ?
+                    `<pre class="mt-1 text-sm bg-gray-50 p-3 rounded overflow-x-auto">${item.value}</pre>` :
+                    `<div class="mt-1 text-sm text-gray-900">${item.value}</div>`
+                }
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Update block button with the alert's source IP
+            if (alert.source) {
+                blockBtn.onclick = () => {
+                    if (confirm(`Are you sure you want to block ${alert.source}?`)) {
+                        blockIP(alert.source);
+                        closeModal();
+                    }
+                };
+                blockBtn.style.display = 'inline-flex';
+            } else {
+                blockBtn.style.display = 'none';
+            }
+
+            // Show the modal
+            modal.classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('alert-modal').classList.add('hidden');
+        }
+
+        // Block IP address
+        function blockIP(ip) {
+            fetch('/api/block-ip', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ip: ip })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Successfully blocked ${ip}`);
+                        updateAlerts();
+                    } else {
+                        alert(`Failed to block ${ip}: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error blocking IP:', error);
+                    alert('Error blocking IP. Please check the console for details.');
+                });
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+        }
+
+        // Toggle auto-refresh
+        function toggleAutoRefresh() {
+            isPaused = !isPaused;
+            const pauseBtn = document.getElementById('pause-refresh');
+            if (isPaused) {
+                pauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                pauseBtn.title = 'Resume auto-refresh';
+            } else {
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                pauseBtn.title = 'Pause auto-refresh';
+                updateAlerts();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize dashboard
+            updateDashboard();
+            updateAlerts();
+            updateTime();
+
+            // Update time every second
+            setInterval(updateTime, 1000);
+
+            // Update dashboard every 2 seconds
+            setInterval(updateDashboard, 2000);
+
+            // Update alerts every 5 seconds
+            setInterval(() => {
+                if (!isPaused) {
+                    updateAlerts();
+                }
+            }, 5000);
+
+            // Manual refresh button
+            document.getElementById('refresh-alerts').addEventListener('click', () => {
+                updateAlerts();
+                refreshTimer = 5; // Reset the timer
+            });
+
+            // Time range buttons
+            document.querySelectorAll('#time-5m, #time-15m, #time-1h').forEach(button => {
+                button.addEventListener('click', function () {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('#time-5m, #time-15m, #time-1h').forEach(btn => {
+                        btn.classList.remove('bg-indigo-100', 'text-indigo-700');
+                        btn.classList.add('bg-white', 'border', 'border-gray-300');
+                    });
+
+                    // Add active class to clicked button
+                    this.classList.remove('bg-white', 'border', 'border-gray-300');
+                    this.classList.add('bg-indigo-100', 'text-indigo-700');
+
+                    // Here you would typically update the time range for the chart data
+                    // For now, we'll just update the chart title
+                    const range = this.id.replace('time-', '');
+                    console.log(`Time range updated to: ${range}`);
+                });
+            });
+
+            // Set the default active time range
+            document.getElementById('time-5m').click();
+
+            // Modal close buttons
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('alert-modal');
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Pause/play auto-refresh
+            document.getElementById('pause-refresh').addEventListener('click', toggleAutoRefresh);
+        });
+    </script>
+</body>
+
+</html>
